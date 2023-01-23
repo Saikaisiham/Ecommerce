@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'base',
     'crispy_forms',
+    'django_countries'
 ]
 
 MIDDLEWARE = [

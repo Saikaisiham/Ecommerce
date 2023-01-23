@@ -17,7 +17,7 @@
               <div class='hideable_shipping_form'>
 
                 <div class="md-form mb-5">
-                  <input type='text'  id='shipping_address' name='shipping_address' class='form-control' />
+                  <input type='text'  name='shipping_address' class='form-control' />
                   <label for="shipping_address" class="">Address</label>
                 </div>
 
@@ -29,7 +29,7 @@
                 <div class="row">
                   <div class="col-lg-4 col-md-12 mb-4">
                     <label for="country">Country</label>
-                    
+                    {{ form.shipping_country }}
                     <div class="invalid-feedback">
                       Please select a valid country.
                     </div>
@@ -54,12 +54,12 @@
 
               </div>
 
-              
+              {% if default_shipping_address %}
               <div class="custom-control custom-checkbox">
                 <input type="checkbox" class="custom-control-input" name="use_default_shipping" id="use_default_shipping">
-                <label class="custom-control-label" for="use_default_shipping">Use default shipping address: </label>
+                <label class="custom-control-label" for="use_default_shipping">Use default shipping address: {{ default_shipping_address.street_address|truncatechars:10 }}</label>
               </div>
-             
+              {% endif %}
 
               <hr>
 
@@ -67,19 +67,19 @@
 
               <div class='hideable_billing_form'>
                 <div class="md-form mb-5">
-                  <input type='text' placeholder='1234 Main St' id='billing_address' name='billing_address' class='form-control' />
+                  <input type='text'  id='billing_address' name='billing_address' class='form-control' />
                   <label for="billing_address" class="">Address</label>
                 </div>
 
                 <div class="md-form mb-5">
-                  <input type='text' placeholder='Apartment or suite' id='billing_address2' name='billing_address2' class='form-control' />
+                  <input type='text'  id='billing_address2' name='billing_address2' class='form-control' />
                   <label for="billing_address2" class="">Address 2 (optional)</label>
                 </div>
 
                 <div class="row">
                   <div class="col-lg-4 col-md-12 mb-4">
                     <label for="country">Country</label>
-                    
+                    {{ form.billing_country }}
                     <div class="invalid-feedback">
                       Please select a valid country.
                     </div>
@@ -102,23 +102,23 @@
 
               </div>
 
-              
+              {% if default_billing_address %}
               <div class="custom-control custom-checkbox">
                 <input type="checkbox" class="custom-control-input" name="use_default_billing" id="use_default_billing">
-                <label class="custom-control-label" for="use_default_billing">Use default billing address: </label>
+                <label class="custom-control-label" for="use_default_billing">Use default billing address: {{ default_billing_address.street_address|truncatechars:10 }}</label>
               </div>
-              
+              {% endif %}
               <hr>
 
               <h3>Payment option</h3>
 
               <div class="d-block my-3">
-                
+                {% for value, name in form.fields.payment_option.choices %}
                 <div class="custom-control custom-radio">
-                  <input id="" name="payment_option" value="" type="radio" class="custom-control-input" required>
-                  <label class="custom-control-label" for=""></label>
+                  <input id="{{ name }}" name="payment_option" value="{{ value }}" type="radio" class="custom-control-input" required>
+                  <label class="custom-control-label" for="{{ name }}">{{ name }}</label>
                 </div>
-                
+                {% endfor %}
               </div>
 
               <hr class="mb-4">
@@ -138,8 +138,8 @@
 
     </div>
   </main>
-{% endblock %}
 
+{% endblock content %}
 
 {% block extra_scripts %}
 <script>

@@ -7,6 +7,7 @@ from django.views.generic import ListView,DetailView,View
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from .forms import CheckoutForm
 # Create your views here.
 
 
@@ -42,46 +43,54 @@ def home(request):
 
     return render (request,'home.html',context)
 
-def checkout(request):
-    items = Item.objects.all()
-    context ={
-        'items' : items
-    }
+class CheckoutView(View):
+    def get(self, *args ,**kwargs):
+        form = CheckoutForm()
+        context = {
+            'form' : form
+        }
+        return render (self.request,'checkout.html',context)
+    def post(self,*args,**kwargs):
+        form = CheckoutForm(self.request.POST or None)
+        if form.is_valid():
+            return redirect('base:checkout')
 
-    return render (request,'checkout.html',context)
 
 def product(request):
     return render (request,'product.html')
 
 
+
+
+
 @login_required
-# add to cart
-def add_to_cart(request,slug):
-    item = get_object_or_404(Item,slug=slug)
-    order_item ,created= OrderItem.objects.get_or_create(
+def add_to_cart(request, slug):
+    item = get_object_or_404(Item, slug=slug)
+    order_item, created = OrderItem.objects.get_or_create(
         item=item,
-        user = request.user,
-        ordered = False
-
+        user=request.user,
+        ordered=False
     )
-    order_qs = Order.objects.filter(user=request.user,ordered=False)
-
+    order_qs = Order.objects.filter(user=request.user, ordered=False)
     if order_qs.exists():
         order = order_qs[0]
         # check if the order item is in the order
         if order.items.filter(item__slug=item.slug).exists():
             order_item.quantity += 1
             order_item.save()
-            messages.info(request,'this quantity was updated')
-        else : 
-            messages.info(request,'this item was added to your cart')
+            messages.info(request, "This item quantity was updated.")
+            return redirect("base:order-summary")
+        else:
             order.items.add(order_item)
-    else :
-        orderedDate = timezone.now()
-        order = Order.objects.create(user=request.user,orderedDate=orderedDate)
-        order.item.add(order_item)
-        messages.info(request,'this item was added to your cart')
-    return redirect('base:product',slug=slug)
+            messages.info(request, "This item was added to your cart.")
+            return redirect("base:order-summary")
+    else:
+        ordered_date = timezone.now()
+        order = Order.objects.create(
+            user=request.user, ordered_date=ordered_date)
+        order.items.add(order_item)
+        messages.info(request, "This item was added to your cart.")
+        return redirect("base:order-summary")
 
 
 
