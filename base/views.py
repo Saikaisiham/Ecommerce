@@ -8,8 +8,12 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .forms import CheckoutForm
+from.models import BillingAddress
+import stripe
+from django.conf import settings
 # Create your views here.
 
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 class OrderSummery(LoginRequiredMixin,View):
     def get(self,*args,**kwrgs):
@@ -52,12 +56,55 @@ class CheckoutView(View):
         return render (self.request,'checkout.html',context)
     def post(self,*args,**kwargs):
         form = CheckoutForm(self.request.POST or None)
-        if form.is_valid():
+        try : 
+            order = Order.objects.get(user=self.request.user,ordered=False)
+            if form.is_valid():
+                street_address = form.cleaned_data('street_address')
+                apartement_address = form.cleaned_data.get('apartement_address')
+                country = form.cleaned_data.get('country')
+                zip = form.cleaned_data.get('zip')
+                #TODO :add functionality for these fields
+                # same_shipping_address = form.cleaned_data.get('same_shipping_address')
+                # save_info = form.cleaned_data.get('save_info')
+                payement_option = form.cleaned_data.get('payement_option')
+                billing_address = BillingAddress(
+                    user = self.request.user,
+                    street_address= street_address,
+                    apartement_address=apartement_address,
+                    country=country,
+                    zip = zip ,
+
+                )
+                billing_address.save()
+                order.billing_address = billing_address
+                order.save()
+                return redirect('base:checkout')
+            messages.warning(self.request, 'Faild Checkout')
             return redirect('base:checkout')
+        except ObjectDoesNotExist : 
+            messages.error(self.request , 'you dont have an active order')
+            return redirect('base:order_summary')
+        
 
 
 def product(request):
     return render (request,'product.html')
+
+
+class PaymentView(View):
+    def get(self, *args , **kwargs):
+        
+        return render(self.request, 'payment.html')
+
+    def post(self,*args,**kwargs):
+
+        token = self.request.POST.get('stripeToken')
+        stripe.Charge.create(
+            amount=2000 ,
+            currency='usd' ,
+            source=token,
+            description='My First Test Charge',
+        )
 
 
 
